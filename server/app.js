@@ -1,0 +1,13 @@
+const express = require('express'), cors = require('cors'), helmet = require('helmet');
+const rateLimit = require('express-rate-limit'), mongoSanitize = require('express-mongo-sanitize');
+const app = express();
+app.set('trust proxy', 1);
+app.use(helmet());
+app.use(cors({ origin: (process.env.CLIENT_URL || '*').split(',').map(s => s.trim()) }));
+app.use(express.json({ limit: '1mb' }));
+app.use(mongoSanitize());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.use('/api', require('./routes'));
+app.use(require('./middleware/error'));
+module.exports = app;
